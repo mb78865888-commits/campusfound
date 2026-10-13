@@ -1,0 +1,15 @@
+# Railway: unpacks the campusfound zip (uploaded next to this file) and runs the app.
+# Works with any zip named campusfound*.zip (e.g. campusfound_1.zip).
+# Required Railway variable: SECRET_KEY. Recommended: a volume mounted at /data.
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 FLASK_CONFIG=production TRUST_PROXY=1 DATA_DIR=/data
+WORKDIR /build
+COPY campusfound*.zip /build/app.zip
+RUN python -m zipfile -e /build/app.zip /build/unzipped \
+    && if [ -d /build/unzipped/campusfound ]; then mv /build/unzipped/campusfound /app; else mv /build/unzipped /app; fi \
+    && rm -rf /build
+WORKDIR /app
+RUN pip install --no-cache-dir -r requirements.txt && mkdir -p /data
+ENV PORT=8080
+EXPOSE 8080
+CMD ["python", "run.py", "--no-browser"]
